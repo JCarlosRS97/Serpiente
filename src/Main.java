@@ -29,13 +29,11 @@ public class Main {
             try {
                 barrier.await();
                 Thread.sleep(100);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            } catch (BrokenBarrierException e) {
+            } catch (InterruptedException | BrokenBarrierException e) {
                 e.printStackTrace();
             }
         }
-        executor.shutdownNow();
+        executor.shutdown();
         try {
             executor.awaitTermination(1, TimeUnit.DAYS);
         } catch (InterruptedException e) {

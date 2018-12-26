@@ -20,4 +20,9 @@ public class Cell {
     public void setY(int y) {
         this.y = y;
     }
+
+    @Override
+    public String toString() {
+        return Character.forDigit(x, 10) + " " + Character.forDigit(y, 10);
+    }
 }

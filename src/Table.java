@@ -11,6 +11,7 @@ public class Table {
     private Condition isAllMoved;
     private Graficador graficador;
     private final int nSnakes;
+    private boolean waitingForPrint = false;
     private int snakesThisTurn = 0;
     public Table(int gSize, CyclicBarrier barrier, int nSnakes){
         this.nSnakes = nSnakes;
@@ -42,7 +43,7 @@ public class Table {
         return table[x][y] == '*';
     }
 
-    public void placeInitialPosition(int id, Cell[] parts) {
+    public void placeInitialPosition(int id, LinkedList<Cell> parts, int snakeSize) {
         lock.lock();
         List<Integer> possiblePlaces = new ArrayList<>();
         for(int i = 0; i < getLength(); i++){
@@ -52,58 +53,59 @@ public class Table {
         }
         Random random = new Random();
         int c = possiblePlaces.get(random.nextInt(possiblePlaces.size()));
-        for(int i = 0; i < parts.length; i++){
-            parts[i] = new Cell(c, 1 + i);
+        for(int i = 0; i < snakeSize; i++){
+            parts.addLast(new Cell(c, 1 + i));
             table[i+1][c] = Character.forDigit(id, 10);
         }
+        System.out.println(toString());
         lock.unlock();
     }
 
-    public boolean ifAliveRandomMove(int id, Cell[] parts) {
+    public boolean ifAliveRandomMove(int id, LinkedList<Cell> parts) {
         boolean res = false;
         try {
             barrier.await();
             lock.lock();
 
-            while(snakesThisTurn == 0){
+            while(waitingForPrint){
                 isWrited.await();
             }
             snakesThisTurn++;
-            isAllMoved.signalAll();
+            if(snakesThisTurn == nSnakes){
+                isAllMoved.signalAll();
+                waitingForPrint = true;
+            }
+
             //Elegimos el siguiente movimiento
             List<Cell> possiblePlaces = new ArrayList<>();
             //Hacia la izquierda
-            if (parts[0].getX() > 0 && parts[1].getX() != (parts[0].getX() - 1)) {
-                possiblePlaces.add(new Cell(parts[0].getX() - 1, parts[0].getY()));
+            if (parts.getFirst().getX() > 0 && parts.get(1).getX() != (parts.getFirst().getX() - 1)) {
+                possiblePlaces.add(new Cell(parts.getFirst().getX() - 1, parts.getFirst().getY()));
             }
             //Hacia la derecha
-            if (parts[0].getX() < getLength() - 1 && parts[1].getX() != (parts[0].getX() + 1)) {
-                possiblePlaces.add(new Cell(parts[0].getX() + 1, parts[0].getY()));
+            if (parts.getFirst().getX() < getLength() - 1 && parts.get(1).getX() != (parts.getFirst().getX() + 1)) {
+                possiblePlaces.add(new Cell(parts.getFirst().getX() + 1, parts.getFirst().getY()));
             }
             //Hacia abajo
-            if (parts[0].getY() < getLength() - 1 && parts[1].getY() != (parts[0].getY() + 1)) {
-                possiblePlaces.add(new Cell(parts[0].getX(), parts[0].getY() + 1));
+            if (parts.getFirst().getY() < getLength() - 1 && parts.get(1).getY() != (parts.getFirst().getY() + 1)) {
+                possiblePlaces.add(new Cell(parts.getFirst().getX(), parts.getFirst().getY() + 1));
             }
             //Hacia arriba
-            if (parts[0].getY() > 0 && parts[1].getY() != (parts[0].getY() - 1)) {
-                possiblePlaces.add(new Cell(parts[0].getX(), parts[0].getY() - 1));
+            if (parts.getFirst().getY() > 0 && parts.get(1).getY() != (parts.getFirst().getY() - 1)) {
+                possiblePlaces.add(new Cell(parts.getFirst().getX(), parts.getFirst().getY() - 1));
             }
-
 
             Random random = new Random();
             Cell c = possiblePlaces.get(random.nextInt(possiblePlaces.size()));
+            System.out.println(Thread.currentThread().getName() + " escoge " + c);
             //Se comprueba si hay otra serpiente
             if (isFree(c.getX(), c.getY())){
+                System.out.println("No choca");
                 // Ahora hay que mover la serpiente
-                //En el tablero:
-                writeCellInTable(parts[parts.length - 1], '*');
+                //En el tablero y en snake
+                writeCellInTable(parts.removeLast(), '*');
+                parts.addFirst(c);
                 writeCellInTable(c, Character.forDigit(id, 10));
-                // En la serpiente
-                for (int i = parts.length-1; i > 0; i--) {
-                    parts[i-1] = parts[i];
-                }
-                //System.arraycopy(parts, 0, parts, 1, parts.length-1);//TODO : Cuando funcione lo otro probar esto
-                parts[0] = c;
                 res = true;
             }
         }catch (Exception e){
@@ -114,7 +116,7 @@ public class Table {
         return res;
     }
     private void writeCellInTable(Cell cell, char a){
-        table[cell.getX()][cell.getY()] = a;
+        table[cell.getY()][cell.getX()] = a;
     }
 
     public void syncToString() {
@@ -125,6 +127,7 @@ public class Table {
             }
             snakesThisTurn = 0;
             System.out.println(toString());
+            waitingForPrint = false;
             isWrited.signalAll();
         }catch (InterruptedException e){
             graficador.setPlaying(false);
