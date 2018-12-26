@@ -1,15 +1,24 @@
 import java.util.*;
 import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class Table {
     private char table[][];
     private ReentrantLock lock;
     private CyclicBarrier barrier;
-    public Table(int gSize, CyclicBarrier barrier){
+    private Condition isWrited;
+    private Condition isAllMoved;
+    private Graficador graficador;
+    private final int nSnakes;
+    private int snakesThisTurn = 0;
+    public Table(int gSize, CyclicBarrier barrier, int nSnakes){
+        this.nSnakes = nSnakes;
         table = new char[gSize][gSize];
         Arrays.stream(table).forEach(e -> Arrays.fill(e, '*'));
         lock = new ReentrantLock();
+        isWrited = lock.newCondition();
+        isAllMoved = lock.newCondition();
         this.barrier = barrier;
     }
 
@@ -25,11 +34,11 @@ public class Table {
         return s.toString();
     }
 
-    public int getLength(){
+    private int getLength(){
         return table[0].length;
     }
 
-    public boolean isFree(int x, int y){
+    private boolean isFree(int x, int y){
         return table[x][y] == '*';
     }
 
@@ -50,11 +59,17 @@ public class Table {
         lock.unlock();
     }
 
-    public boolean randomMove(int id, Cell[] parts) {
-        lock.lock();
+    public boolean ifAliveRandomMove(int id, Cell[] parts) {
         boolean res = false;
         try {
             barrier.await();
+            lock.lock();
+
+            while(snakesThisTurn == 0){
+                isWrited.await();
+            }
+            snakesThisTurn++;
+            isAllMoved.signalAll();
             //Elegimos el siguiente movimiento
             List<Cell> possiblePlaces = new ArrayList<>();
             //Hacia la izquierda
@@ -73,6 +88,8 @@ public class Table {
             if (parts[0].getY() > 0 && parts[1].getY() != (parts[0].getY() - 1)) {
                 possiblePlaces.add(new Cell(parts[0].getX(), parts[0].getY() - 1));
             }
+
+
             Random random = new Random();
             Cell c = possiblePlaces.get(random.nextInt(possiblePlaces.size()));
             //Se comprueba si hay otra serpiente
@@ -82,9 +99,10 @@ public class Table {
                 writeCellInTable(parts[parts.length - 1], '*');
                 writeCellInTable(c, Character.forDigit(id, 10));
                 // En la serpiente
-                for (int i = parts.length; i > 0; i--) {
-                    parts[i] = parts[i + 1];
+                for (int i = parts.length-1; i > 0; i--) {
+                    parts[i-1] = parts[i];
                 }
+                //System.arraycopy(parts, 0, parts, 1, parts.length-1);//TODO : Cuando funcione lo otro probar esto
                 parts[0] = c;
                 res = true;
             }
@@ -97,5 +115,21 @@ public class Table {
     }
     private void writeCellInTable(Cell cell, char a){
         table[cell.getX()][cell.getY()] = a;
+    }
+
+    public void syncToString() {
+        lock.lock();
+        try {
+            while(snakesThisTurn < nSnakes){
+                isAllMoved.await();
+            }
+            snakesThisTurn = 0;
+            System.out.println(toString());
+            isWrited.signalAll();
+        }catch (InterruptedException e){
+            graficador.setPlaying(false);
+        }finally {
+            lock.unlock();
+        }
     }
 }

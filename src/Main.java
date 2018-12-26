@@ -1,6 +1,3 @@
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.ReentrantLock;
@@ -17,8 +14,9 @@ public class Main {
     public static void main(String[] args) {
         //setData();
         CyclicBarrier barrier = new CyclicBarrier(nSnakes + 1);
-        Table table = new Table(gSize, barrier);
+        Table table = new Table(gSize, barrier, nSnakes);
         Snake[] snakes = new Snake[nSnakes];
+        Graficador graficador = new Graficador(table);
         ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(nSnakes+1); // nSakes + writer
         int id = 0;
         for (Snake snake : snakes) {
@@ -26,7 +24,7 @@ public class Main {
             id++;
             executor.execute(snake);
         }
-
+        executor.execute(graficador);
         for(int i = 0; i < nSteps; i++){
             try {
                 barrier.await();

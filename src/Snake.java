@@ -1,4 +1,3 @@
-import java.util.Random;
 
 public class Snake implements Runnable{
     private Table table;
@@ -13,11 +12,10 @@ public class Snake implements Runnable{
 
     @Override
     public void run() {
-        Random random = new Random();
         Thread.currentThread().setName("Serpiente_" + id);
         table.placeInitialPosition(id, parts);
         while(isPlaying){
-            isPlaying = table.randomMove(id, parts);
+            isPlaying = table.ifAliveRandomMove(id, parts);
         }
     }
 }
