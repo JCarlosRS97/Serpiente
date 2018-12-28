@@ -33,7 +33,7 @@ public class Main {
                 e.printStackTrace();
             }
         }
-        executor.shutdown();
+        executor.shutdownNow();
         try {
             executor.awaitTermination(1, TimeUnit.DAYS);
         } catch (InterruptedException e) {

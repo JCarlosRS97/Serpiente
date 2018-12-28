@@ -40,19 +40,20 @@ public class Table {
     }
 
     private boolean isFree(int x, int y){
-        return table[x][y] == '*';
+        return table[y][x] == '*';
     }
 
     public void placeInitialPosition(int id, LinkedList<Cell> parts, int snakeSize) {
         lock.lock();
         List<Integer> possiblePlaces = new ArrayList<>();
         for(int i = 0; i < getLength(); i++){
-            if(isFree(1, i)){
+            if(isFree(i, 1)){
                 possiblePlaces.add(i);
             }
         }
         Random random = new Random();
         int c = possiblePlaces.get(random.nextInt(possiblePlaces.size()));
+        System.out.println(Thread.currentThread().getName() + " escoge " + new Cell(c, 1));
         for(int i = 0; i < snakeSize; i++){
             parts.addLast(new Cell(c, 1 + i));
             table[i+1][c] = Character.forDigit(id, 10);
