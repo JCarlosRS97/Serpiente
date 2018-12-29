@@ -11,7 +11,7 @@ public class Main {
     private static int gSize = 5;
     private static int nSnakes = 2;
     private static int snakeSize = 2;
-    private static int nSteps = 3;
+    private static int nSteps = 10;
     public static void main(String[] args) {
         //setData();
         FileWriter logfile;

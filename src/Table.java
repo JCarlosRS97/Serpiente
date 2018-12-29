@@ -11,6 +11,8 @@ public class Table {
     private Condition isWritten;
     private Condition isAllMoved;
     private int nSnakes;
+    private int turnsForPrint = 1;
+    private final static int NUMTURNFORPRINT = 3;
     private boolean waitingForPrint = false;
     private int snakesThisTurn = 0;
     private FileWriter logFile;
@@ -139,7 +141,12 @@ public class Table {
                 isAllMoved.await();
             }
             snakesThisTurn = 0;
-            System.out.println(toString());
+            if(turnsForPrint == NUMTURNFORPRINT){
+                turnsForPrint = 1;
+                System.out.println(toString());
+            }else{
+                turnsForPrint++;
+            }
             waitingForPrint = false;
             isWritten.signalAll();
         }catch (InterruptedException e){
