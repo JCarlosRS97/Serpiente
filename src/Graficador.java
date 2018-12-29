@@ -14,8 +14,9 @@ public class Graficador implements Runnable {
 
     @Override
     public void run() {
+        Thread.currentThread().setName("Graficador");
         while(isPlaying){
-            table.syncToString();
+            table.syncToString(this);
         }
     }
 }

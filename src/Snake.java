@@ -1,12 +1,25 @@
 import java.util.LinkedList;
-import java.util.List;
 
 public class Snake implements Runnable{
     private Table table;
     private boolean isPlaying = true;
+    private boolean isAlive = true;
     private LinkedList<Cell> parts;
     private int id;
     private int snakeSize;
+
+    public void setPlaying(boolean playing) {
+        isPlaying = playing;
+    }
+
+    public LinkedList<Cell> getParts() {
+        return parts;
+    }
+
+    public int getId() {
+        return id;
+    }
+
     public Snake(int id, int snakeSize, Table table){
         parts = new LinkedList<>(); // No cambia de tamaño
         this.table = table;
@@ -19,7 +32,10 @@ public class Snake implements Runnable{
         Thread.currentThread().setName("Serpiente_" + id);
         table.placeInitialPosition(id, parts, snakeSize);
         while(isPlaying){
-            isPlaying = table.ifAliveRandomMove(id, parts);
+            isAlive = table.ifAliveRandomMove(this, isAlive);
+            if(!isAlive){
+
+            }
         }
     }
 }
