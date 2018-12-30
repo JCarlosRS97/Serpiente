@@ -1,5 +1,7 @@
 import java.io.FileWriter;
+import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
@@ -11,9 +13,10 @@ public class Table {
     private Condition isWritten;
     private Condition isAllMoved;
     private int nSnakes;
-    private int turnsForPrint = 1;
-    private final static int NUMTURNFORPRINT = 3;
+    private int turnsForPrint = 3;
+    private final static int NUM_TURN_FOR_PRINT = 3;
     private boolean waitingForPrint = false;
+    private boolean isFirstPrint = true;
     private int snakesThisTurn = 0;
     private FileWriter logFile;
     public Table(int gSize, CyclicBarrier barrier, int nSnakes, FileWriter fileWriter){
@@ -62,11 +65,11 @@ public class Table {
             parts.addLast(new Cell(c, 1 + i));
             table[i+1][c] = Character.forDigit(id, 10);
         }
-        System.out.println(toString());
+        snakesThisTurn++;
         lock.unlock();
     }
 
-    public boolean ifAliveRandomMove(Snake snake, boolean isAlive) {
+    public boolean ifAliveRandomMove(Snake snake, boolean isAlive) throws InterruptedException, BrokenBarrierException {
         boolean res = isAlive;
         try {
             barrier.await();
@@ -109,7 +112,7 @@ public class Table {
                     System.out.println("No choca");
                     // Ahora hay que mover la serpiente
                     //En el tablero y en snake
-                    logFile.write("Snake " + snake.getId() + " moved from : " + parts.getLast() + " to " + c + " at " + System.currentTimeMillis() + '\n');
+                    logFile.write("Snake " + snake.getId() + " moved from : " + parts.getFirst() + " to " + c + " at " + System.currentTimeMillis() + '\n');
                     writeCellInTable(parts.removeLast(), '*');
                     parts.addFirst(c);
                     writeCellInTable(c, Character.forDigit(snake.getId(), 10));
@@ -119,10 +122,16 @@ public class Table {
                     res = false;
                 }
             }else {
-                System.out.println(Thread.currentThread().getName() + " está muerto.");
+                System.out.println(Thread.currentThread().getName() + " está muerto");
             }
-        }catch(Exception e){
-            snake.setPlaying(false);
+        }catch (IOException e){
+            try {
+                if(logFile != null){
+                    logFile.close();
+                }
+            } catch (IOException i) {
+                e.printStackTrace();
+            }
         }finally {
             if (lock.isHeldByCurrentThread()) {
                 lock.unlock();
@@ -141,8 +150,12 @@ public class Table {
                 isAllMoved.await();
             }
             snakesThisTurn = 0;
-            if(turnsForPrint == NUMTURNFORPRINT){
+            if(turnsForPrint == NUM_TURN_FOR_PRINT){
                 turnsForPrint = 1;
+                if(isFirstPrint){
+                    isFirstPrint = false;
+                    System.out.println("Posición inicial:");
+                }
                 System.out.println(toString());
             }else{
                 turnsForPrint++;

@@ -1,4 +1,5 @@
 import java.util.LinkedList;
+import java.util.concurrent.BrokenBarrierException;
 
 public class Snake implements Runnable{
     private Table table;
@@ -8,9 +9,6 @@ public class Snake implements Runnable{
     private int id;
     private int snakeSize;
 
-    public void setPlaying(boolean playing) {
-        isPlaying = playing;
-    }
 
     public LinkedList<Cell> getParts() {
         return parts;
@@ -32,9 +30,10 @@ public class Snake implements Runnable{
         Thread.currentThread().setName("Serpiente_" + id);
         table.placeInitialPosition(id, parts, snakeSize);
         while(isPlaying){
-            isAlive = table.ifAliveRandomMove(this, isAlive);
-            if(!isAlive){
-
+            try {
+                isAlive = table.ifAliveRandomMove(this, isAlive);
+            } catch (InterruptedException | BrokenBarrierException e) {
+                isPlaying = false;
             }
         }
     }
