@@ -13,7 +13,7 @@ public class Main {
     private static int snakeSize = 2;
     private static int nSteps = 10;
     public static void main(String[] args) {
-        //setData();
+        setData();
         FileWriter logFile;
         try {
             logFile = new FileWriter("Log.txt");
@@ -21,6 +21,7 @@ public class Main {
             System.out.println("No es posible almacenar el log en este directorio.");
             logFile = null;
         }
+        //logFile = null; //Esta sentencia muestra la robustez del programa frente a fallos de escritura en el fichero
         CyclicBarrier barrier = new CyclicBarrier(nSnakes + 1);
         Table table = new Table(gSize, barrier, nSnakes, logFile);
         Snake[] snakes = new Snake[nSnakes];
@@ -45,7 +46,8 @@ public class Main {
         }
         executor.shutdownNow();
         try {
-            executor.awaitTermination(1, TimeUnit.DAYS);
+            executor.awaitTermination(1, TimeUnit.DAYS); // Se impone un tiempo en la practica infinito de espera
+                                                                 // para la finalizacion de todos los hilos
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

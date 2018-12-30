@@ -179,14 +179,7 @@ public class Table {
         try {
             logFile.write(str);
         }catch (Exception e){
-            try {
-                System.out.println("No se puede escribir en el log.");
-                if(logFile != null){
-                    logFile.close();
-                }
-            } catch (IOException i) {
-                i.printStackTrace();
-            }
+            System.out.println("No se puede escribir en el log.");
         }
     }
 }
