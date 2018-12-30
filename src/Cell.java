@@ -15,6 +15,6 @@ public class Cell {
 
     @Override
     public String toString() {
-        return "(" +Character.forDigit(x, 10) + " " + Character.forDigit(y, 10) + ")";
+        return "(" + x + " " + y + ")";
     }
 }

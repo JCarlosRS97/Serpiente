@@ -13,16 +13,16 @@ public class Main {
     private static int snakeSize = 2;
     private static int nSteps = 10;
     public static void main(String[] args) {
-        //setData();
-        FileWriter logfile;
+        setData();
+        FileWriter logFile;
         try {
-            logfile = new FileWriter("Log.txt");
+            logFile = new FileWriter("Log.txt");
         } catch (IOException e) {
             System.out.println("No es posible almacenar el log en este directorio.");
-            logfile = null;
+            logFile = null;
         }
         CyclicBarrier barrier = new CyclicBarrier(nSnakes + 1);
-        Table table = new Table(gSize, barrier, nSnakes, logfile);
+        Table table = new Table(gSize, barrier, nSnakes, logFile);
         Snake[] snakes = new Snake[nSnakes];
         Graficador graficador = new Graficador(table);
         ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(nSnakes+1); // nSakes + writer
@@ -53,8 +53,8 @@ public class Main {
         System.out.println(table);
 
         try {
-            if(logfile != null){
-                logfile.close();
+            if(logFile != null){
+                logFile.close();
             }
         } catch (IOException e) {
             e.printStackTrace();

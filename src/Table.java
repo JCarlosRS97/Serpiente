@@ -7,7 +7,7 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class Table {
-    private char table[][];
+    private int table[][];
     private ReentrantLock lock;
     private CyclicBarrier barrier;
     private Condition isWritten;
@@ -21,8 +21,8 @@ public class Table {
     private FileWriter logFile;
     public Table(int gSize, CyclicBarrier barrier, int nSnakes, FileWriter fileWriter){
         this.nSnakes = nSnakes;
-        table = new char[gSize][gSize];
-        Arrays.stream(table).forEach(e -> Arrays.fill(e, '*'));
+        table = new int[gSize][gSize];
+        Arrays.stream(table).forEach(e -> Arrays.fill(e, -1));
         lock = new ReentrantLock();
         isWritten = lock.newCondition();
         isAllMoved = lock.newCondition();
@@ -32,10 +32,18 @@ public class Table {
 
     @Override
     public String toString() {
+        int digits = (int) (Math.log10(table[0].length) + 1);
         StringBuilder s = new StringBuilder();
+        Formatter f = new Formatter(s);
         for(int i = 0; i < table[0].length; i++){
-            for (char a: table[i]) {
-                s.append(a).append(" ");
+            for (int a: table[i]) {
+                if(a == -1){
+                    //s.append('*').append(" ");
+                    f.format("%" + digits + "c ", '*');
+                }else{
+                    //s.append(a).append(" ");
+                    f.format("%" + digits + "d ", a);
+                }
             }
             s.append('\n');
         }
@@ -47,7 +55,7 @@ public class Table {
     }
 
     private boolean isFree(int x, int y){
-        return table[y][x] == '*';
+        return table[y][x] == -1;
     }
 
     public void placeInitialPosition(int id, LinkedList<Cell> parts, int snakeSize) {
@@ -63,7 +71,7 @@ public class Table {
         System.out.println(Thread.currentThread().getName() + " escoge " + new Cell(c, 1));
         for(int i = 0; i < snakeSize; i++){
             parts.addLast(new Cell(c, 1 + i));
-            table[i+1][c] = Character.forDigit(id, 10);
+            table[i+1][c] = id;
         }
         snakesThisTurn++;
         lock.unlock();
@@ -113,9 +121,9 @@ public class Table {
                     // Ahora hay que mover la serpiente
                     //En el tablero y en snake
                     logFile.write("Snake " + snake.getId() + " moved from : " + parts.getFirst() + " to " + c + " at " + System.currentTimeMillis() + '\n');
-                    writeCellInTable(parts.removeLast(), '*');
+                    writeCellInTable(parts.removeLast(), -1);
                     parts.addFirst(c);
-                    writeCellInTable(c, Character.forDigit(snake.getId(), 10));
+                    writeCellInTable(c, snake.getId());
                 }else {
                     System.out.println("Han chocado");
                     logFile.write("Snake " + snake.getId() + " died at : " + c + " at " + System.currentTimeMillis() + '\n');
@@ -139,7 +147,7 @@ public class Table {
         }
         return res;
     }
-    private void writeCellInTable(Cell cell, char a){
+    private void writeCellInTable(Cell cell, int a){
         table[cell.getY()][cell.getX()] = a;
     }
 
