@@ -1,12 +1,8 @@
 
 public class Graficador implements Runnable {
     private final Table table;
-
-    public void setPlaying(boolean playing) {
-        isPlaying = playing;
-    }
-
     private boolean isPlaying = true;
+
     public Graficador(Table table) {
         this.table = table;
     }
@@ -16,7 +12,11 @@ public class Graficador implements Runnable {
     public void run() {
         Thread.currentThread().setName("Graficador");
         while(isPlaying){
-            table.syncToString(this);
+            try {
+                table.syncToString();
+            } catch (InterruptedException e) {
+                isPlaying = false;
+            }
         }
     }
 }

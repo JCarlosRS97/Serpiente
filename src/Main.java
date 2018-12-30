@@ -13,7 +13,7 @@ public class Main {
     private static int snakeSize = 2;
     private static int nSteps = 10;
     public static void main(String[] args) {
-        setData();
+        //setData();
         FileWriter logFile;
         try {
             logFile = new FileWriter("Log.txt");
@@ -35,7 +35,8 @@ public class Main {
 
         for(int i = 1; i < nSteps +1 ; i++){
             try {
-                System.out.println("Turno " + i + ":");
+                if (i > 1)
+                    System.out.println("Turno " + i + ":");
                 barrier.await();
                 Thread.sleep(100);
             } catch (InterruptedException | BrokenBarrierException e) {

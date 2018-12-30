@@ -15,7 +15,7 @@ public class Table {
     private final int nSnakes;
     private int turnsForPrint = 3;
     private final static int NUM_TURN_FOR_PRINT = 3;
-    private boolean waitingForPrint = false;
+    private boolean waitingForPrint = true;
     private boolean isFirstPrint = true;
     private int snakesThisTurn = 0;
     private final FileWriter logFile;
@@ -68,12 +68,15 @@ public class Table {
         }
         Random random = new Random();
         int c = possiblePlaces.get(random.nextInt(possiblePlaces.size()));
-        System.out.println(Thread.currentThread().getName() + " escoge " + new Cell(c, 1));
         for(int i = 0; i < snakeSize; i++){
             parts.addLast(new Cell(c, 1 + i));
             table[i+1][c] = id;
         }
         snakesThisTurn++;
+        if(snakesThisTurn == nSnakes){
+            isAllMoved.signalAll();
+            waitingForPrint = true;
+        }
         lock.unlock();
     }
 
@@ -144,7 +147,7 @@ public class Table {
         table[cell.getY()][cell.getX()] = a;
     }
 
-    public void syncToString(Graficador g) {
+    public void syncToString() throws InterruptedException {
         lock.lock();
         try {
             while(snakesThisTurn < nSnakes){
@@ -156,19 +159,20 @@ public class Table {
                 if(isFirstPrint){
                     isFirstPrint = false;
                     System.out.println("Posición inicial:");
+                    System.out.println(toString());
+                    System.out.println("Turno 1:");
+                }else {
+                    System.out.println(toString());
                 }
-                System.out.println(toString());
             }else{
                 turnsForPrint++;
             }
             waitingForPrint = false;
             isWritten.signalAll();
         }catch (InterruptedException e){
-            g.setPlaying(false);
+            throw new InterruptedException("Fin del juego");
         }finally {
-            if (lock.isHeldByCurrentThread()) {
-                lock.unlock();
-            }
+            lock.unlock();
         }
     }
     private void writeInLogFile(String str){
