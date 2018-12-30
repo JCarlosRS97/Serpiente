@@ -21,7 +21,6 @@ public class Main {
             System.out.println("No es posible almacenar el log en este directorio.");
             logFile = null;
         }
-        logFile = null;
         CyclicBarrier barrier = new CyclicBarrier(nSnakes + 1);
         Table table = new Table(gSize, barrier, nSnakes, logFile);
         Snake[] snakes = new Snake[nSnakes];

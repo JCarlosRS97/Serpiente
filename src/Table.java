@@ -79,8 +79,9 @@ public class Table {
 
     public boolean ifAliveRandomMove(Snake snake, boolean isAlive) throws InterruptedException, BrokenBarrierException {
         boolean res = isAlive;
+
+        barrier.await();
         try {
-            barrier.await();
             lock.lock();
 
             while(waitingForPrint){
@@ -120,30 +121,22 @@ public class Table {
                     System.out.println("No choca");
                     // Ahora hay que mover la serpiente
                     //En el tablero y en snake
-                    logFile.write("Snake " + snake.getId() + " moved from : " + parts.getFirst() + " to " + c + " at " + System.currentTimeMillis() + '\n');
+                    writeInLogFile("Snake " + snake.getId() + " moved from : " + parts.getFirst() + " to " + c + " at " + System.currentTimeMillis() + '\n');
                     writeCellInTable(parts.removeLast(), -1);
                     parts.addFirst(c);
                     writeCellInTable(c, snake.getId());
                 }else {
                     System.out.println("Han chocado");
-                    logFile.write("Snake " + snake.getId() + " died at : " + c + " at " + System.currentTimeMillis() + '\n');
+                    writeInLogFile("Snake " + snake.getId() + " died at : " + c + " at " + System.currentTimeMillis() + '\n');
                     res = false;
                 }
             }else {
                 System.out.println(Thread.currentThread().getName() + " está muerto");
             }
-        }catch (IOException e){
-            try {
-                if(logFile != null){
-                    logFile.close();
-                }
-            } catch (IOException i) {
-                i.printStackTrace();
-            }
+        }catch (InterruptedException e){
+            throw new InterruptedException("Fin del juego"); // De esta forma se asegura que se libera el lock
         }finally {
-            if (lock.isHeldByCurrentThread()) {
-                lock.unlock();
-            }
+            lock.unlock();
         }
         return res;
     }
@@ -175,6 +168,20 @@ public class Table {
         }finally {
             if (lock.isHeldByCurrentThread()) {
                 lock.unlock();
+            }
+        }
+    }
+    private void writeInLogFile(String str){
+        try {
+            logFile.write(str);
+        }catch (Exception e){
+            try {
+                System.out.println("No se puede escribir en el log.");
+                if(logFile != null){
+                    logFile.close();
+                }
+            } catch (IOException i) {
+                i.printStackTrace();
             }
         }
     }
