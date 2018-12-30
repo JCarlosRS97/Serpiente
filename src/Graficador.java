@@ -1,6 +1,6 @@
 
 public class Graficador implements Runnable {
-    private Table table;
+    private final Table table;
 
     public void setPlaying(boolean playing) {
         isPlaying = playing;

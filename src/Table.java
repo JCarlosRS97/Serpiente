@@ -7,18 +7,18 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class Table {
-    private int table[][];
-    private ReentrantLock lock;
-    private CyclicBarrier barrier;
-    private Condition isWritten;
-    private Condition isAllMoved;
-    private int nSnakes;
+    private final int table[][];
+    private final ReentrantLock lock;
+    private final CyclicBarrier barrier;
+    private final Condition isWritten;
+    private final Condition isAllMoved;
+    private final int nSnakes;
     private int turnsForPrint = 3;
     private final static int NUM_TURN_FOR_PRINT = 3;
     private boolean waitingForPrint = false;
     private boolean isFirstPrint = true;
     private int snakesThisTurn = 0;
-    private FileWriter logFile;
+    private final FileWriter logFile;
     public Table(int gSize, CyclicBarrier barrier, int nSnakes, FileWriter fileWriter){
         this.nSnakes = nSnakes;
         table = new int[gSize][gSize];
@@ -138,7 +138,7 @@ public class Table {
                     logFile.close();
                 }
             } catch (IOException i) {
-                e.printStackTrace();
+                i.printStackTrace();
             }
         }finally {
             if (lock.isHeldByCurrentThread()) {

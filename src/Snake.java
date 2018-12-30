@@ -2,12 +2,12 @@ import java.util.LinkedList;
 import java.util.concurrent.BrokenBarrierException;
 
 public class Snake implements Runnable{
-    private Table table;
+    private final Table table;
     private boolean isPlaying = true;
     private boolean isAlive = true;
-    private LinkedList<Cell> parts;
-    private int id;
-    private int snakeSize;
+    private final LinkedList<Cell> parts;
+    private final int id;
+    private final int snakeSize;
 
 
     public LinkedList<Cell> getParts() {

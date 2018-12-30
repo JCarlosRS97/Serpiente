@@ -6,7 +6,7 @@ import java.util.concurrent.*;
 public class Main {
     private final static int GSIZE_MIN = 2;
     private final static int NSKNAKES_MIN = 1;
-    private final static int SNAKESIZE_MIN = 1;
+    private final static int SNAKESIZE_MIN = 2;
     private final static int NSTEPS_MIN = 1;
     private static int gSize = 5;
     private static int nSnakes = 2;
@@ -21,11 +21,12 @@ public class Main {
             System.out.println("No es posible almacenar el log en este directorio.");
             logFile = null;
         }
+        logFile = null;
         CyclicBarrier barrier = new CyclicBarrier(nSnakes + 1);
         Table table = new Table(gSize, barrier, nSnakes, logFile);
         Snake[] snakes = new Snake[nSnakes];
         Graficador graficador = new Graficador(table);
-        ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(nSnakes+1); // nSakes + writer
+        ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(nSnakes+1); // nSakes + main
 
         for (int i = 0; i < snakes.length; i++) {
             snakes[i] = new Snake(i, snakeSize, table);
@@ -39,7 +40,7 @@ public class Main {
                 barrier.await();
                 Thread.sleep(100);
             } catch (InterruptedException | BrokenBarrierException e) {
-                e.printStackTrace();
+                executor.shutdownNow(); // Si el main es interrumpido, se interrumpe el resto de hilos
             }
         }
         executor.shutdownNow();
@@ -71,7 +72,7 @@ public class Main {
             gSize = scanner.nextInt();
         }
 
-        System.out.println("Introducir el numero de serpientes: : ");
+        System.out.println("Introducir el numero de serpientes: ");
         nSnakes = scanner.nextInt();
         while(nSnakes < NSKNAKES_MIN && nSnakes > gSize){
             System.out.println("Error. El minimo numero es " + NSKNAKES_MIN + " y el máximo es " + gSize);
