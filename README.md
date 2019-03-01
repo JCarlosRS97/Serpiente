@@ -1,2 +1,2 @@
 # Serpiente
-A university proyecto in order to understand advanced concurrency.
+A university proyect in order to understand advanced concurrency.
